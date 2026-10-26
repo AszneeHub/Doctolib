@@ -2,7 +2,7 @@ name: Doctolib Termin-Check
 
 on:
   schedule:
-    - cron: "*/10 * * * *"   # alle 10 Minuten (GitHub startet oft ein paar Minuten später)
+    - cron: "*/5 * * * *"   # alle 5 Minuten (GitHub startet oft ein paar Minuten später)
   workflow_dispatch:          # erlaubt manuelles Starten über "Run workflow"
 
 permissions:
