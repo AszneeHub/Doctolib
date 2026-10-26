@@ -1,0 +1,43 @@
+name: Doctolib Termin-Check
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # alle 10 Minuten (GitHub startet oft ein paar Minuten später)
+  workflow_dispatch:          # erlaubt manuelles Starten über "Run workflow"
+
+permissions:
+  contents: write             # damit gemeldete Termine gespeichert werden können
+
+concurrency:
+  group: doctolib-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Abhängigkeiten installieren
+        run: pip install curl_cffi
+
+      - name: Termine prüfen
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python doctolib_checker.py --once
+
+      - name: Bereits gemeldete Termine speichern
+        if: always()
+        run: |
+          if [ -f .doctolib_seen.json ] && [ -n "$(git status --porcelain .doctolib_seen.json)" ]; then
+            git config user.name "termin-bot"
+            git config user.email "termin-bot@users.noreply.github.com"
+            git add .doctolib_seen.json
+            git commit -m "Gemeldete Termine aktualisiert"
+            git push
+          fi
